@@ -10,7 +10,7 @@
   --green: #2f7a3b;
   --orange: #c4572a;
   --radius: 16px;
-  --font: var(--font-georgian), Arial, sans-serif;
+  --font: "Noto Sans Georgian Variable", Arial, sans-serif;
 }
 
 /* ───────── base ───────── */

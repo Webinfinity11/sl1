@@ -1,13 +1,7 @@
 import type { Metadata, Viewport } from "next";
-import { Noto_Sans_Georgian } from "next/font/google";
+import "@fontsource-variable/noto-sans-georgian";
 import { site } from "@/lib/site";
 import "./globals.css";
-
-const georgian = Noto_Sans_Georgian({
-  variable: "--font-georgian",
-  subsets: ["georgian", "latin"],
-  weight: ["400", "500", "600", "700", "800"],
-});
 
 export const metadata: Metadata = {
   metadataBase: new URL(site.url),
@@ -20,7 +14,7 @@ export const viewport: Viewport = { themeColor: "#174abc" };
 
 export default function RootLayout({ children }: LayoutProps<"/">) {
   return (
-    <html lang="ka" className={georgian.variable}>
+    <html lang="ka">
       <body>{children}</body>
     </html>
   );
