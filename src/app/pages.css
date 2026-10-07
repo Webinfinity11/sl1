@@ -361,3 +361,56 @@
 .side-child .side-toggle { width: 26px; height: 26px; }
 .listing { grid-template-columns: 285px minmax(0, 1fr); }
 @media (max-width: 900px) { .listing { grid-template-columns: 1fr; } }
+
+/* ───────── mobile fixes ───────── */
+.listing > * { min-width: 0; }
+@media (max-width: 900px) {
+  .listing { grid-template-columns: minmax(0, 1fr); }
+}
+@media (max-width: 600px) {
+  /* listing toolbar: chips row, then count + sort, then full-width price filter */
+  .toolbar { display: grid; grid-template-columns: minmax(0, 1fr) auto; align-items: center; gap: 10px; }
+  .toolbar .chips { grid-column: 1 / -1; width: auto; margin-inline: -16px; padding-inline: 16px; }
+  .toolbar .resultcount { grid-column: 1; }
+  .toolbar .sort { grid-column: 2; width: auto; margin: 0; gap: 6px; }
+  .toolbar .sort select { max-width: 170px; }
+  .toolbar .pricefilter { grid-column: 1 / -1; width: 100%; }
+  .subcats { margin-inline: -16px; padding-inline: 16px; }
+
+  /* checkout steps: compact, labels only for the current step */
+  .steps { gap: 4px; }
+  .steps li:not(.current) { font-size: 0; gap: 0; }
+  .steps li + li::before { width: 12px; }
+  .steps span { width: 26px; height: 26px; font-size: 12px; }
+  .steps .current { font-size: 13px; }
+
+  /* about stats */
+  .stats { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .stats strong { font-size: 22px; }
+  .stats span { font-size: 12.5px; }
+
+  /* product page buy row: stepper | add | heart on one line */
+  .pdp-buy { gap: 8px; }
+  .purchase-lg { flex-direction: row; height: 52px; max-width: none; min-width: 0; }
+  .purchase-lg .stepper { flex: none; }
+  .purchase-lg .stepper button { width: 34px; }
+  .purchase-lg .stepper input { width: 36px; }
+  .purchase-lg .add { white-space: nowrap; font-size: 14px; padding: 0 10px; }
+  .purchase-lg .add .icon { display: none; }
+  .pdp-buy .heart { width: 52px; flex: none; }
+
+  /* product rails: wider cards */
+  .rail { grid-auto-columns: 64%; }
+  .rail-arrow { display: none; }
+}
+@media (max-width: 370px) {
+  .rail { grid-auto-columns: 74%; }
+  .purchase-lg .add { font-size: 13px; }
+}
+@media (max-width: 900px) { .client-list { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+@media (max-width: 400px) { .client-list { grid-template-columns: minmax(0, 1fr); } }
+@media (max-width: 600px) {
+  .toolbar .sort { font-size: 0; }
+  .toolbar .sort select { font-size: 14px; }
+  .toolbar .resultcount { white-space: nowrap; }
+}
