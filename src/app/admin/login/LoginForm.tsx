@@ -8,8 +8,8 @@ export function LoginForm() {
   const [state, action, pending] = useActionState(login, null);
   return (
     <form action={action} className="grid gap-4">
-      <Field label="ელფოსტა">
-        <input name="email" type="email" required autoComplete="username" className={inputCls} />
+      <Field label="მომხმარებელი">
+        <input name="email" type="text" required autoComplete="username" autoCapitalize="none" spellCheck={false} className={inputCls} />
       </Field>
       <Field label="პაროლი">
         <input name="password" type="password" required autoComplete="current-password" className={inputCls} />

@@ -5,8 +5,8 @@ import bcrypt from "bcryptjs";
 import { admins, db } from "../src/db";
 
 const [email, password] = process.argv.slice(2);
-if (!email || !password || password.length < 8) {
-  console.error("usage: create-admin.ts <email> <password (8+ chars)>");
+if (!email || !password || password.length < 6) {
+  console.error("usage: create-admin.ts <email> <password (6+ chars)>");
   process.exit(1);
 }
 
