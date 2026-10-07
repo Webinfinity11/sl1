@@ -414,3 +414,21 @@
   .toolbar .sort select { font-size: 14px; }
   .toolbar .resultcount { white-space: nowrap; }
 }
+
+/* ───────── card add-to-cart button: adapt to the card's own width ───────── */
+.product { container-type: inline-size; }
+.purchase { display: grid; grid-template-columns: auto minmax(0, 1fr); gap: 8px; height: 42px; }
+.purchase .stepper button { width: 28px; }
+.purchase .stepper input { width: 30px; }
+.add { white-space: nowrap; padding: 0 12px; gap: 7px; font-size: 14px; letter-spacing: .1px; border-radius: 10px; box-shadow: 0 4px 12px #174abc29; transition: background .15s, box-shadow .15s; }
+.add:hover { box-shadow: 0 6px 16px #174abc40; }
+.add .icon { width: 17px; height: 17px; }
+/* cards narrower than 280px: stepper on top, full-width button below */
+@container (max-width: 280px) {
+  .purchase { grid-template-columns: minmax(0, 1fr); height: auto; gap: 8px; }
+  .purchase .stepper { height: 38px; justify-content: space-between; }
+  .purchase .stepper button { width: 38px; }
+  .purchase .stepper input { flex: 1; }
+  .purchase .add { min-height: 42px; }
+}
+.purchase-lg { display: flex; }
