@@ -2,12 +2,12 @@ import Image from "next/image";
 import Link from "next/link";
 import { AddToCart, FavButton } from "@/components/cart/CartUI";
 import type { ProductCard as Card } from "@/lib/data";
-import { discount, finalPrice, money, productUrl } from "@/lib/format";
+import { LOW_STOCK, discount, finalPrice, money, productUrl } from "@/lib/format";
 
 export function ProductCard({ p, priority }: { p: Card; priority?: boolean }) {
   const price = finalPrice(p);
   const off = discount(p);
-  const item = { id: p.id, name: p.name, slug: p.slug, price, image: p.image };
+  const item = { id: p.id, name: p.name, slug: p.slug, price, image: p.image, max: p.stockQty ?? undefined };
   const href = productUrl(p.slug);
   return (
     <article className="product">
@@ -33,19 +33,13 @@ export function ProductCard({ p, priority }: { p: Card; priority?: boolean }) {
         <h3>
           <Link href={href}>{p.name}</Link>
         </h3>
-        <span className={p.inStock ? "stock" : "stock out"}>{p.inStock ? "მარაგშია" : "არ არის მარაგში"}</span>
+        <StockLabel inStock={p.inStock} stockQty={p.stockQty} />
         <div className="price-row">
-          {price > 0 ? (
-            <>
-              <span className="price">
-                {money(price)}
-                <span className="currency">₾</span>
-              </span>
-              {off > 0 && <span className="oldprice">{money(p.price)} ₾</span>}
-            </>
-          ) : (
-            <span className="price-request">ფასი შეთანხმებით</span>
-          )}
+          <span className="price">
+            {money(price)}
+            <span className="currency">₾</span>
+          </span>
+          {off > 0 && <span className="oldprice">{money(p.price)} ₾</span>}
         </div>
         {p.inStock && <AddToCart item={item} />}
         {p.sku && <p className="sku">კოდი: {p.sku}</p>}
@@ -62,4 +56,10 @@ export function ProductGrid({ items }: { items: Card[] }) {
       ))}
     </div>
   );
+}
+
+export function StockLabel({ inStock, stockQty }: { inStock: boolean; stockQty: number | null }) {
+  if (!inStock) return <span className="stock out">არ არის მარაგში</span>;
+  if (stockQty != null && stockQty <= LOW_STOCK) return <span className="stock low">დარჩა {stockQty} ც.</span>;
+  return <span className="stock">მარაგშია</span>;
 }

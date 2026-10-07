@@ -5,7 +5,7 @@ import { db, categories, products, productCategories, type Category, type Produc
 export type CategoryNode = Category & { count: number; children: CategoryNode[] };
 export type ProductCard = Pick<
   Product,
-  "id" | "name" | "slug" | "sku" | "price" | "salePrice" | "inStock"
+  "id" | "name" | "slug" | "sku" | "price" | "salePrice" | "inStock" | "stockQty"
 > & { image: string | null; category: string | null };
 
 export type SortKey = "default" | "new" | "price-asc" | "price-desc" | "name";
@@ -75,6 +75,8 @@ export type ProductQuery = {
   sale?: boolean;
   inStock?: boolean;
   priced?: boolean;
+  minPrice?: number;
+  maxPrice?: number;
 };
 
 export async function getProducts(query: ProductQuery) {
@@ -82,7 +84,7 @@ export async function getProducts(query: ProductQuery) {
   cacheLife("hours");
   cacheTag("products");
 
-  const { categoryIds, q, sort = "default", page = 1, sale, inStock, priced } = query;
+  const { categoryIds, q, sort = "default", page = 1, sale, inStock, priced, minPrice, maxPrice } = query;
   const where: (SQL | undefined)[] = [eq(products.published, true)];
   if (categoryIds?.length) {
     where.push(
@@ -102,12 +104,14 @@ export async function getProducts(query: ProductQuery) {
   if (sale) where.push(isNotNull(products.salePrice));
   if (inStock) where.push(eq(products.inStock, true));
   if (priced) where.push(sql`${products.price} > 0`);
+  if (minPrice) where.push(sql`${effectivePrice} >= ${minPrice}`);
+  if (maxPrice) where.push(sql`${effectivePrice} <= ${maxPrice}`);
 
   const order = {
     default: [desc(products.featured), desc(products.inStock), sql`${products.price} = 0`, desc(products.createdAt)],
     new: [desc(products.createdAt)],
-    "price-asc": [asc(effectivePrice)],
-    "price-desc": [desc(effectivePrice)],
+    "price-asc": [sql`${products.price} = 0`, asc(effectivePrice)],
+    "price-desc": [sql`${products.price} = 0`, desc(effectivePrice)],
     name: [asc(products.name)],
   }[sort];
 
@@ -151,6 +155,7 @@ async function toCards(rows: Product[]): Promise<ProductCard[]> {
       price: p.price,
       salePrice: p.salePrice,
       inStock: p.inStock,
+      stockQty: p.stockQty,
       image: p.images[0] ?? null,
       category: best ? (all.find((c) => c.id === best.categoryId)?.name ?? null) : null,
     };

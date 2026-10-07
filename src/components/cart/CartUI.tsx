@@ -7,7 +7,7 @@ import { Icon } from "@/components/Icon";
 import { money, productUrl } from "@/lib/format";
 import { MAX_QTY, useCart, type FavItem } from "./CartProvider";
 
-export function Stepper({ value, onChange, label }: { value: number; onChange: (n: number) => void; label: string }) {
+export function Stepper({ value, onChange, label, max = MAX_QTY }: { value: number; onChange: (n: number) => void; label: string; max?: number }) {
   const [draft, setDraft] = useState(String(value));
   useEffect(() => setDraft(String(value)), [value]);
   return (
@@ -19,14 +19,14 @@ export function Stepper({ value, onChange, label }: { value: number; onChange: (
         type="number"
         inputMode="numeric"
         min={1}
-        max={MAX_QTY}
+        max={max}
         value={draft}
         aria-label={`რაოდენობა: ${label}`}
         onChange={(e) => setDraft(e.target.value)}
         onBlur={() => onChange(Number(draft))}
         onKeyDown={(e) => e.key === "Enter" && onChange(Number(draft))}
       />
-      <button type="button" onClick={() => onChange(value + 1)} disabled={value >= MAX_QTY} aria-label="რაოდენობის გაზრდა">
+      <button type="button" onClick={() => onChange(value + 1)} disabled={value >= max} aria-label="რაოდენობის გაზრდა">
         +
       </button>
     </div>
@@ -36,13 +36,14 @@ export function Stepper({ value, onChange, label }: { value: number; onChange: (
 export function AddToCart({ item, size }: { item: FavItem; size?: "lg" }) {
   const { add } = useCart();
   const [qty, setQty] = useState(1);
-  const clamp = (n: number) => Math.min(MAX_QTY, Math.max(1, Math.floor(n) || 1));
+  const max = Math.min(MAX_QTY, item.max ?? MAX_QTY);
+  const clamp = (n: number) => Math.min(max, Math.max(1, Math.floor(n) || 1));
   return (
     <div className={size === "lg" ? "purchase purchase-lg" : "purchase"}>
-      <Stepper value={qty} onChange={(n) => setQty(clamp(n))} label={item.name} />
+      <Stepper value={qty} onChange={(n) => setQty(clamp(n))} label={item.name} max={max} />
       <button type="button" className="add" onClick={() => add(item, qty)}>
         <Icon name="cart" />
-        {item.price ? "დამატება" : "მოთხოვნა"}
+        {size === "lg" ? "კალათაში დამატება" : "დამატება"}
       </button>
     </div>
   );
@@ -56,7 +57,7 @@ export function FavButton({ item, className = "heart" }: { item: FavItem; classN
       type="button"
       className={liked ? `${className} liked` : className}
       aria-pressed={liked}
-      aria-label={`${item.name}: რჩეულებში`}
+      aria-label={`${item.name}: სურვილების სიაში`}
       onClick={() => toggleFav(item)}
     >
       <Icon name="heart" />
@@ -68,12 +69,12 @@ export function HeaderCounters() {
   const { count, total, favs, setDrawerOpen } = useCart();
   return (
     <div className="header-actions">
-      <Link className="headbtn" href="/favorites" aria-label="რჩეული პროდუქტები">
+      <Link className="headbtn" href="/favorites" aria-label="სურვილების სია">
         <Icon name="heart" />
         {favs.length > 0 && <span className="counter">{favs.length}</span>}
         <span className="btntext">
-          <span className="desc">თქვენი სია</span>
-          <strong>რჩეულები</strong>
+          <span className="desc">შენახული</span>
+          <strong>სურვილების სია</strong>
         </span>
       </Link>
       <button className="headbtn" onClick={() => setDrawerOpen(true)} aria-label="კალათის გახსნა">
@@ -102,7 +103,7 @@ export function MobileCartTab() {
 }
 
 export function CartDrawer() {
-  const { lines, count, total, hasQuoteItems, drawerOpen, setDrawerOpen, setQty, remove } = useCart();
+  const { lines, count, total, drawerOpen, setDrawerOpen, setQty, remove } = useCart();
   const closeRef = useRef<HTMLButtonElement>(null);
 
   useEffect(() => {
@@ -153,9 +154,9 @@ export function CartDrawer() {
                       {l.name}
                     </Link>
                   </h3>
-                  <span className="price">{l.price ? `${money(l.price * l.qty)} ₾` : "ფასი შეთანხმებით"}</span>
+                  <span className="price">{money(l.price * l.qty)} ₾</span>
                   <div className="cart-controls">
-                    <Stepper value={l.qty} onChange={(n) => setQty(l.id, n)} label={l.name} />
+                    <Stepper value={l.qty} onChange={(n) => setQty(l.id, n)} label={l.name} max={l.max} />
                     {l.price > 0 && <span className="muted small">{money(l.price)} ₾ / ც.</span>}
                   </div>
                 </div>
@@ -172,10 +173,14 @@ export function CartDrawer() {
               <span>ჯამური ღირებულება</span>
               <strong>{money(total)} ₾</strong>
             </div>
-            {hasQuoteItems && <p className="note">ზოგიერთი პროდუქტის ფასს მენეჯერი დაგიზუსტებთ.</p>}
-            <Link className="primary wide" href="/checkout" onClick={() => setDrawerOpen(false)}>
-              შეკვეთის გაფორმება <Icon name="arrow" />
-            </Link>
+            <div className="drawer-actions">
+              <Link className="secondary" href="/cart" onClick={() => setDrawerOpen(false)}>
+                კალათის ნახვა
+              </Link>
+              <Link className="primary" href="/checkout" onClick={() => setDrawerOpen(false)}>
+                გაფორმება <Icon name="arrow" />
+              </Link>
+            </div>
           </div>
         )}
       </aside>

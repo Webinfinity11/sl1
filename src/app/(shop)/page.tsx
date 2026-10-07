@@ -3,98 +3,82 @@ import Link from "next/link";
 import { cacheLife } from "next/cache";
 import { Icon } from "@/components/Icon";
 import { ProductCard } from "@/components/ProductCard";
+import { RailScroller } from "@/components/RailScroller";
 import { getCategoryTree, getHomeSections, type CategoryNode, type ProductCard as Card } from "@/lib/data";
 import { categoryUrl } from "@/lib/format";
-import { site } from "@/lib/site";
+import { getContent } from "@/lib/content";
 
-const brands = ["domestos", "pronto", "bagi", "ariel", "selpak", "frosch"];
+const benefitIcons = ["truck", "box", "tag", "shield"] as const;
+
+const brands = ["ariel", "tide", "fairy", "domestos", "cif", "mrmuscle", "frosch", "pronto", "duck", "glade", "safeguard", "selpak", "bagi", "hobby", "belux", "teo", "acord", "rorax"];
 
 export default async function HomePage() {
   "use cache";
   cacheLife("hours");
 
-  const [tree, { latest, sale }] = await Promise.all([getCategoryTree(), getHomeSections()]);
-  const shown = tree.filter((c) => c.count > 0);
-  // The two largest categories get wide tiles with their top subcategories listed.
-  const bigIds = new Set(shown.toSorted((a, b) => b.count - a.count).slice(0, 2).map((c) => c.id));
-  const office = shown.find((c) => c.name.includes("კომპიუტერ"));
+  const [tree, { latest, sale }, { home, site }] = await Promise.all([getCategoryTree(), getHomeSections(), getContent()]);
+  // Tree order = admin "sort order", then product count.
+  const shown = tree.filter((c) => c.count > 0).slice(0, 12);
+  const productTotal = tree.reduce((n, c) => n + c.count, 0);
 
   return (
     <>
       <div className="container hero-area">
-        <div className="hero-grid">
-          <section className="hero">
-            <Image className="heroimg" src="/img/heroimg.webp" alt="" width={720} height={420} priority />
-            <div className="herotext">
-              <div className="eyebrow">SMARTLINE / ONLINE SHOP</div>
-              <h1>
-                ყველაფერი საჭირო.
-                <br />
-                ერთ სივრცეში.
-              </h1>
-              <p>ოფისისთვის, ბიზნესისთვის და სახლისთვის — შეარჩიეთ მარტივად, შეუკვეთეთ კომფორტულად.</p>
+        <section className="hero">
+          <div className="herotext">
+            <div className="eyebrow">{home.heroEyebrow}</div>
+            <h1>
+              {home.heroTitle}
+              <br />
+              <span>{home.heroTitleAccent}</span>
+            </h1>
+            <p>{home.heroText}</p>
+            <div className="hero-actions">
               <Link className="primary" href="/catalog">
-                შეარჩიეთ პროდუქცია <Icon name="arrow" />
+                {home.heroButton} <Icon name="arrow" />
               </Link>
-              <div className="hero-meta">
-                <i /> {shown.length} კატეგორია · სწრაფი მიწოდება თბილისში
-              </div>
+              {home.heroSecondButton && (
+                <Link className="secondary" href="/contact">
+                  {home.heroSecondButton}
+                </Link>
+              )}
             </div>
-          </section>
-          <div className="promos">
-            <section className="promo">
-              <div className="text">
-                <p className="label">სამუშაო სივრცისთვის</p>
-                <h3>
-                  მეტი კომფორტი
-                  <br />
-                  თქვენს ოფისში
-                </h3>
-                <Link className="textlink" href={office ? categoryUrl(office.slug) : "/catalog"}>
-                  ნახეთ კოლექცია <Icon name="arrow" />
-                </Link>
-              </div>
-              <Image className="techimg" src="/img/techimg.webp" alt="" width={300} height={220} />
-            </section>
-            <section className="promo deliverypromo">
-              <div className="text">
-                <p className="label">კარგი ამბავი</p>
-                <h3>
-                  მიწოდება
-                  <br />
-                  უფასოდ
-                </h3>
-                <Link className="textlink" href="/delivery">
-                  {site.freeDeliveryFrom} ₾-დან შეკვეთაზე <Icon name="arrow" />
-                </Link>
-              </div>
-              <div className="delivery-art">
-                <Icon name="truck" />
-              </div>
-            </section>
+            <ul className="hero-stats">
+              <li>
+                <strong>{productTotal}+</strong> პროდუქტი
+              </li>
+              <li>
+                <strong>{shown.length}</strong> კატეგორია
+              </li>
+              <li>
+                <strong>{site.freeDeliveryFrom} ₾</strong>-დან უფასო მიწოდება
+              </li>
+            </ul>
           </div>
-        </div>
+          <div className="heroart">
+            <Image src="/img/heroimg.webp" alt="საკანცელარიო და ოფისის პროდუქცია" fill sizes="(max-width: 900px) 100vw, 640px" priority />
+          </div>
+        </section>
         <div className="benefits">
-          <Benefit icon="truck" title="სწრაფი მიწოდება" text="თქვენთვის მოსახერხებელ მისამართზე" />
-          <Benefit icon="box" title="მარტივი შეკვეთა" text="რაოდენობა პირდაპირ ბარათიდან" />
-          <Benefit icon="tag" title="ბიზნეს ფასები" text="ინდივიდუალური შეთავაზება ოფისებისთვის" />
-          <Benefit icon="shield" title="ყველაფერი ერთად" text="ასობით პროდუქტი ერთ სივრცეში" />
+          {home.benefits.slice(0, 4).map((b, i) => (
+            <Benefit key={i} icon={benefitIcons[i]} title={b.title} text={b.text} />
+          ))}
         </div>
       </div>
 
       <section className="container section">
         <div className="sectiontitle">
           <div>
-            <h2>იპოვეთ თქვენი კატეგორია</h2>
-            <p>მარტივი არჩევანი ნებისმიერი საჭიროებისთვის</p>
+            <h2>{home.categoriesTitle}</h2>
+            <p>{home.categoriesText}</p>
           </div>
           <Link className="textlink" href="/categories">
             ყველა კატეგორია <Icon name="arrow" />
           </Link>
         </div>
-        <div className="categories">
-          {[...shown.filter((c) => bigIds.has(c.id)), ...shown.filter((c) => !bigIds.has(c.id))].map((c) => (
-            <CategoryTile key={c.id} c={c} big={bigIds.has(c.id)} />
+        <div className="catgrid">
+          {shown.map((c, i) => (
+            <CategoryTile key={c.id} c={c} tone={i % 6} />
           ))}
         </div>
       </section>
@@ -103,17 +87,7 @@ export default async function HomePage() {
       <Rail title="ახალი პროდუქცია" sub="ბოლოს დამატებული" href="/catalog?sort=new" items={latest} shaded={!sale.length} />
 
       <div className="container section">
-        <section className="business">
-          <div>
-            <div className="eyebrow">SMARTLINE / BUSINESS</div>
-            <h2>თქვენი ბიზნესის ყოველდღიური პარტნიორი</h2>
-            <p>ოფისის მომარაგება ერთ სივრცეში — მოითხოვეთ ინდივიდუალური შეთავაზება.</p>
-          </div>
-          <Link className="primary" href="/contact">
-            დაგვიკავშირდით <Icon name="arrow" />
-          </Link>
-        </section>
-        <h2 className="brandheading">ბრენდები, რომლებსაც იცნობთ</h2>
+        <h2 className="brandheading">{home.brandsTitle}</h2>
         <div className="brands">
           {brands.map((b) => (
             <div key={b}>
@@ -138,22 +112,16 @@ function Benefit({ icon, title, text }: { icon: "truck" | "box" | "tag" | "shiel
   );
 }
 
-function CategoryTile({ c, big }: { c: CategoryNode; big: boolean }) {
-  const subs = c.children.filter((s) => s.count > 0).toSorted((a, b) => b.count - a.count);
+function CategoryTile({ c, tone }: { c: CategoryNode; tone: number }) {
   return (
-    <Link className={big ? "category big" : "category"} href={categoryUrl(c.slug)}>
-      <span className="catimg">{c.image && <Image src={c.image} alt="" fill sizes="140px" />}</span>
-      <span>
+    <Link className={`cattile tone${tone}`} href={categoryUrl(c.slug)}>
+      <span className="cattile-img">{c.image && <Image src={c.image} alt="" fill sizes="(max-width: 600px) 30vw, 180px" />}</span>
+      <span className="cattile-text">
         <strong>{c.name}</strong>
-        <small style={{ display: "block" }}>{c.count} პროდუქტი</small>
-        {big && subs.length > 0 && (
-          <span className="subnames">
-            {subs
-              .slice(0, 4)
-              .map((s) => s.name)
-              .join(" · ")}
-          </span>
-        )}
+        <small>{c.count} პროდუქტი</small>
+      </span>
+      <span className="cattile-go" aria-hidden="true">
+        <Icon name="arrow" />
       </span>
     </Link>
   );
@@ -172,11 +140,11 @@ function Rail({ title, sub, href, items, shaded }: { title: string; sub: string;
             ყველა <Icon name="arrow" />
           </Link>
         </div>
-        <div className="rail">
+        <RailScroller>
           {items.map((p) => (
             <ProductCard key={p.id} p={p} />
           ))}
-        </div>
+        </RailScroller>
       </div>
     </section>
   );

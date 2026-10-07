@@ -1,22 +1,29 @@
 import type { Metadata } from "next";
 import { ContactBox } from "@/components/ContactBox";
-import { site } from "@/lib/site";
+import { getContent } from "@/lib/content";
 
 export const metadata: Metadata = { title: "მიწოდება და გადახდა" };
 
-export default function Page() {
+export default async function DeliveryPage() {
+  const { delivery } = await getContent();
   return (
-    <div className="container">
-      <div className="pagehead">
-        <h1>მიწოდება და გადახდა</h1>
-      </div>
-      <div className="prose">
-        <h2>მიწოდება</h2>
-        <p>{site.freeDeliveryFrom} ₾-დან შეკვეთაზე მიწოდება უფასოა. მომსახურების ზონისა და ვადების დასაზუსტებლად დაგვიკავშირდით.</p>
-        <h2>გადახდა</h2>
-        <p>შეკვეთის გაფორმების შემდეგ მენეჯერი დაგიკავშირდებათ დასადასტურებლად. გადახდა შესაძლებელია ნაღდი ანგარიშსწორებით ან საბანკო გადარიცხვით; კომპანიებისთვის გამოიწერება ინვოისი.</p>
+    <>
+      <section className="pagehero compact">
+        <div className="container">
+          <h1>{delivery.title}</h1>
+        </div>
+      </section>
+      <div className="container prose">
+        {delivery.sections.map((s) => (
+          <section key={s.title}>
+            <h2>{s.title}</h2>
+            {s.text.split(/\n\s*\n/).map((p, i) => (
+              <p key={i}>{p}</p>
+            ))}
+          </section>
+        ))}
         <ContactBox />
       </div>
-    </div>
+    </>
   );
 }

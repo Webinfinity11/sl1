@@ -8,7 +8,7 @@ import { Button, PageTitle, inputCls } from "@/components/admin/ui";
 import { FlagToggle } from "@/components/admin/FlagToggle";
 
 const PER_PAGE = 50;
-const filters = { "": "ყველა", hidden: "დამალული", noprice: "ფასის გარეშე", noimage: "სურათის გარეშე", out: "არ არის მარაგში" };
+const filters = { "": "ყველა", hidden: "დამალული", noprice: "ფასის გარეშე", noimage: "სურათის გარეშე", out: "არ არის მარაგში", low: "მცირე მარაგი (≤5)" };
 
 export default async function ProductsAdmin({ searchParams }: PageProps<"/admin/products">) {
   await requireAdmin();
@@ -33,6 +33,7 @@ export default async function ProductsAdmin({ searchParams }: PageProps<"/admin/
   if (filter === "noprice") where.push(eq(products.price, 0));
   if (filter === "noimage") where.push(sql`jsonb_array_length(${products.images}) = 0`);
   if (filter === "out") where.push(eq(products.inStock, false));
+  if (filter === "low") where.push(sql`${products.stockQty} <= 5`);
 
   const cond = and(...where);
   const [rows, [{ total }], cats] = await Promise.all([
@@ -129,7 +130,11 @@ export default async function ProductsAdmin({ searchParams }: PageProps<"/admin/
                   )}
                 </td>
                 <td className="p-3 text-center">
-                  <FlagToggle id={p.id} flag="inStock" value={p.inStock} />
+                  {p.stockQty != null ? (
+                    <span className={`font-semibold ${p.stockQty === 0 ? "text-red-600" : p.stockQty <= 5 ? "text-amber-600" : "text-green-700"}`}>{p.stockQty} ც.</span>
+                  ) : (
+                    <FlagToggle id={p.id} flag="inStock" value={p.inStock} />
+                  )}
                 </td>
                 <td className="p-3 text-center">
                   <FlagToggle id={p.id} flag="published" value={p.published} />

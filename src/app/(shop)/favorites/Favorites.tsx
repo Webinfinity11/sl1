@@ -35,7 +35,7 @@ export function Favorites() {
               <Link href={productUrl(p.slug)}>{p.name}</Link>
             </h3>
             <div className="price-row" style={{ marginTop: 10 }}>
-              {p.price ? <span className="price">{money(p.price)}<span className="currency">₾</span></span> : <span className="price-request">ფასი შეთანხმებით</span>}
+              <span className="price">{money(p.price)}<span className="currency">₾</span></span>
             </div>
             <AddToCart item={p} />
           </div>

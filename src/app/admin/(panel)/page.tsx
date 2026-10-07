@@ -5,6 +5,7 @@ import { requireAdmin } from "@/lib/auth";
 import { ORDER_STATUS_LABELS } from "@/lib/admin-shared";
 import { Card, PageTitle, StatusBadge } from "@/components/admin/ui";
 import { money } from "@/lib/format";
+import { AutoRefresh } from "@/components/admin/AutoRefresh";
 
 export default async function Dashboard() {
   await requireAdmin();
@@ -14,16 +15,16 @@ export default async function Dashboard() {
         total: sql<number>`count(*)::int`,
         published: sql<number>`count(*) filter (where ${products.published})::int`,
         noPrice: sql<number>`count(*) filter (where ${products.price} = 0 and ${products.published})::int`,
+        newOrders: sql<number>`(select count(*) from orders where status = 'new')::int`,
         noImage: sql<number>`count(*) filter (where jsonb_array_length(${products.images}) = 0)::int`,
       })
       .from(products),
     db.select({ n: sql<number>`count(*)::int` }).from(categories),
     db.select().from(orders).orderBy(desc(orders.createdAt)).limit(8),
   ]);
-  const newOrders = recent.filter((o) => o.status === "new").length;
 
   const tiles = [
-    ["ახალი შეკვეთები", newOrders, "/admin/orders?status=new"],
+    ["ახალი შეკვეთები", stats.newOrders, "/admin/orders?status=new"],
     ["აქტიური პროდუქტი", `${stats.published} / ${stats.total}`, "/admin/products"],
     ["კატეგორია", cats.n, "/admin/categories"],
     ["ფასის გარეშე", stats.noPrice, "/admin/products?filter=noprice"],
@@ -31,6 +32,7 @@ export default async function Dashboard() {
 
   return (
     <>
+      <AutoRefresh />
       <PageTitle>მთავარი</PageTitle>
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
         {tiles.map(([label, value, href]) => (

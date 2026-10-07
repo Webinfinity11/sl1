@@ -47,6 +47,8 @@ export const products = pgTable(
     price: numeric("price", { precision: 10, scale: 2, mode: "number" }).notNull().default(0),
     salePrice: numeric("sale_price", { precision: 10, scale: 2, mode: "number" }),
     inStock: boolean("in_stock").notNull().default(true),
+    // null = stock isn't tracked for this product; otherwise in_stock follows stock_qty > 0
+    stockQty: integer("stock_qty"),
     published: boolean("published").notNull().default(true),
     featured: boolean("featured").notNull().default(false),
     summary: text("summary").notNull().default(""),
@@ -96,3 +98,10 @@ export const admins = pgTable("admins", {
 export type Category = typeof categories.$inferSelect;
 export type Product = typeof products.$inferSelect;
 export type Order = typeof orders.$inferSelect;
+
+/** Editable site content (header, footer, page copy), one JSON document per section. */
+export const settings = pgTable("settings", {
+  key: text("key").primaryKey(),
+  value: jsonb("value").$type<Record<string, unknown>>().notNull(),
+  updatedAt: timestamp("updated_at", { withTimezone: true }).notNull().defaultNow(),
+});

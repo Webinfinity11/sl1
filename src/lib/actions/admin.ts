@@ -6,8 +6,11 @@ import { and, eq, ne, sql } from "drizzle-orm";
 import { updateTag } from "next/cache";
 import { redirect } from "next/navigation";
 import { z } from "zod";
-import { admins, categories, db, orders, productCategories, products } from "@/db";
+import { admins, categories, db, orders, productCategories, products, settings } from "@/db";
 import { ORDER_STATUSES, slugify } from "@/lib/admin-shared";
+import { adjustStock } from "@/lib/stock";
+import { sanitizeSection } from "@/lib/content";
+import { contentDefaults, type ContentKey } from "@/lib/content-schema";
 import { createSession, destroySession, requireAdmin } from "@/lib/auth";
 
 export type ActionResult = { ok: true; id?: number } | { ok: false; error: string };
@@ -68,6 +71,7 @@ const productSchema = z.object({
   price: money,
   salePrice: z.union([z.literal(""), z.null(), money]).optional(),
   inStock: z.boolean(),
+  stockQty: z.union([z.literal(""), z.null(), z.coerce.number().int().min(0).max(1_000_000)]).optional(),
   published: z.boolean(),
   featured: z.boolean(),
   summary: z.string().max(5000),
@@ -98,13 +102,16 @@ export async function saveProduct(id: number | null, input: ProductInput): Promi
   const sale = d.salePrice === "" || d.salePrice == null ? null : Number(d.salePrice);
   if (sale !== null && sale >= d.price) return fail("ფასდაკლებული ფასი ძველ ფასზე ნაკლები უნდა იყოს");
 
+  const stockQty = d.stockQty === "" || d.stockQty == null ? null : Number(d.stockQty);
   const values = {
     name: d.name,
     slug: await uniqueSlug(products, slugify(d.slug || d.name), id ?? undefined),
     sku: d.sku || null,
     price: d.price,
     salePrice: sale,
-    inStock: d.inStock,
+    // A tracked stock count decides availability on its own.
+    inStock: stockQty === null ? d.inStock : stockQty > 0,
+    stockQty,
     published: d.published,
     featured: d.featured,
     summary: d.summary.trim(),
@@ -200,6 +207,36 @@ export async function deleteCategory(id: number): Promise<ActionResult> {
 export async function setOrderStatus(id: number, status: string): Promise<ActionResult> {
   await requireAdmin();
   if (!ORDER_STATUSES.includes(status as (typeof ORDER_STATUSES)[number])) return fail("უცნობი სტატუსი");
+  const [order] = await db.select().from(orders).where(eq(orders.id, id));
+  if (!order) return fail("შეკვეთა ვერ მოიძებნა");
+  if (order.status === status) return { ok: true };
+  // Cancelling returns the units to stock; re-opening a cancelled order takes them again.
+  const units = order.items.map((i) => ({ productId: i.productId, qty: i.qty }));
+  if (status === "cancelled") await adjustStock(units, 1);
+  else if (order.status === "cancelled") await adjustStock(units, -1);
   await db.update(orders).set({ status }).where(eq(orders.id, id));
+  updateTag("products");
+  return { ok: true };
+}
+
+// ───────── site content ─────────
+
+export async function saveContent(key: string, value: unknown): Promise<ActionResult> {
+  await requireAdmin();
+  if (!(key in contentDefaults)) return fail("უცნობი სექცია");
+  const clean = sanitizeSection(key as ContentKey, value);
+  await db
+    .insert(settings)
+    .values({ key, value: clean })
+    .onConflictDoUpdate({ target: settings.key, set: { value: clean, updatedAt: new Date() } });
+  updateTag("content");
+  return { ok: true };
+}
+
+export async function resetContent(key: string): Promise<ActionResult> {
+  await requireAdmin();
+  if (!(key in contentDefaults)) return fail("უცნობი სექცია");
+  await db.delete(settings).where(eq(settings.key, key));
+  updateTag("content");
   return { ok: true };
 }

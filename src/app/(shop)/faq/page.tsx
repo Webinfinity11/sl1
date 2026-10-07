@@ -1,23 +1,28 @@
 import type { Metadata } from "next";
 import { ContactBox } from "@/components/ContactBox";
+import { getContent } from "@/lib/content";
 
 export const metadata: Metadata = { title: "ხშირად დასმული კითხვები" };
 
-export default function Page() {
+export default async function FaqPage() {
+  const { faq } = await getContent();
   return (
-    <div className="container">
-      <div className="pagehead">
-        <h1>ხშირად დასმული კითხვები</h1>
-      </div>
-      <div className="prose">
-        <h2>როგორ შევუკვეთო?</h2>
-        <p>დაამატეთ პროდუქცია კალათაში, შეავსეთ საკონტაქტო ინფორმაცია და გამოგზავნეთ შეკვეთა. მენეჯერი დაგიკავშირდებათ დასადასტურებლად.</p>
-        <h2>რას ნიშნავს „ფასი შეთანხმებით“?</h2>
-        <p>ზოგიერთი პროდუქციის ფასი დამოკიდებულია რაოდენობასა და კონფიგურაციაზე. დაამატეთ კალათაში და ფასს მენეჯერი დაგიზუსტებთ.</p>
-        <h2>მუშაობთ კომპანიებთან?</h2>
-        <p>დიახ — გთავაზობთ ინდივიდუალურ ფასებს, ინვოისს და რეგულარულ მომარაგებას.</p>
+    <>
+      <section className="pagehero compact">
+        <div className="container">
+          <div className="eyebrow">FAQ</div>
+          <h1>{faq.title}</h1>
+        </div>
+      </section>
+      <div className="container faq">
+        {faq.items.map((item, i) => (
+          <details key={item.question} open={i === 0}>
+            <summary>{item.question}</summary>
+            <p>{item.answer}</p>
+          </details>
+        ))}
         <ContactBox />
       </div>
-    </div>
+    </>
   );
 }

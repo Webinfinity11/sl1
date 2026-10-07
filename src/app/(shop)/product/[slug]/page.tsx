@@ -5,9 +5,11 @@ import { Suspense } from "react";
 import { Icon } from "@/components/Icon";
 import { AddToCart, FavButton } from "@/components/cart/CartUI";
 import { Gallery } from "@/components/Gallery";
-import { ProductCard } from "@/components/ProductCard";
+import { ProductCard, StockLabel } from "@/components/ProductCard";
+import { RailScroller } from "@/components/RailScroller";
 import { getAllSlugs, getProduct } from "@/lib/data";
 import { categoryUrl, discount, finalPrice, money, productUrl } from "@/lib/format";
+import { getContent } from "@/lib/content";
 import { site } from "@/lib/site";
 
 const slugOf = async (params: PageProps<"/product/[slug]">["params"]) => decodeURIComponent((await params).slug);
@@ -32,12 +34,12 @@ export async function generateMetadata({ params }: PageProps<"/product/[slug]">)
 }
 
 async function ProductContent({ params }: PageProps<"/product/[slug]">) {
-  const data = await getProduct(await slugOf(params));
+  const [data, { site: info }] = await Promise.all([getProduct(await slugOf(params)), getContent()]);
   if (!data) notFound();
   const { product, trail, categories, related } = data;
   const price = finalPrice(product);
   const off = discount(product);
-  const item = { id: product.id, name: product.name, slug: product.slug, price, image: product.images[0] ?? null };
+  const item = { id: product.id, name: product.name, slug: product.slug, price, image: product.images[0] ?? null, max: product.stockQty ?? undefined };
 
   const jsonLd = {
     "@context": "https://schema.org",
@@ -78,21 +80,15 @@ async function ProductContent({ params }: PageProps<"/product/[slug]">) {
           {trail.length > 0 && <div className="eyebrow">{trail.at(-1)!.name}</div>}
           <h1>{product.name}</h1>
           <div className="pdp-meta">
-            <span className={product.inStock ? "stock" : "stock out"}>{product.inStock ? "მარაგშია" : "არ არის მარაგში"}</span>
+            <StockLabel inStock={product.inStock} stockQty={product.stockQty} />
             {product.sku && <span>კოდი: {product.sku}</span>}
           </div>
           <div className="pdp-price">
-            {price > 0 ? (
-              <>
-                <span className="price">
-                  {money(price)}
-                  <span className="currency">₾</span>
-                </span>
-                {off > 0 && <span className="oldprice">{money(product.price)} ₾</span>}
-              </>
-            ) : (
-              <span className="price-request">ფასი შეთანხმებით</span>
-            )}
+            <span className="price">
+              {money(price)}
+              <span className="currency">₾</span>
+            </span>
+            {off > 0 && <span className="oldprice">{money(product.price)} ₾</span>}
           </div>
           {product.inStock && (
             <div className="pdp-buy">
@@ -100,15 +96,12 @@ async function ProductContent({ params }: PageProps<"/product/[slug]">) {
               <FavButton item={item} />
             </div>
           )}
-          {price === 0 && (
-            <p className="note">დაამატეთ კალათაში და გამოგზავნეთ მოთხოვნა — მენეჯერი დაგიკავშირდებათ ფასის დასაზუსტებლად.</p>
-          )}
           <div className="pdp-perks">
             <div>
-              <Icon name="truck" /> უფასო მიწოდება {site.freeDeliveryFrom} ₾-დან შეკვეთაზე
+              <Icon name="truck" /> უფასო მიწოდება {info.freeDeliveryFrom} ₾-დან შეკვეთაზე
             </div>
             <div>
-              <Icon name="phone" /> კითხვები? <a href={`tel:${site.phone}`}>{site.phoneLabel}</a>
+              <Icon name="phone" /> კითხვები? <a href={`tel:${info.phone}`}>{info.phoneLabel}</a>
             </div>
           </div>
           {product.specs.length > 0 && (
@@ -141,11 +134,11 @@ async function ProductContent({ params }: PageProps<"/product/[slug]">) {
           <div className="sectiontitle">
             <h2>მსგავსი პროდუქცია</h2>
           </div>
-          <div className="rail">
+          <RailScroller>
             {related.map((p) => (
               <ProductCard key={p.id} p={p} />
             ))}
-          </div>
+          </RailScroller>
         </section>
       )}
     </>

@@ -4,29 +4,30 @@ import { Icon } from "@/components/Icon";
 import { MobileCartTab } from "@/components/cart/CartUI";
 import { getCategoryTree } from "@/lib/data";
 import { categoryUrl } from "@/lib/format";
-import { site } from "@/lib/site";
+import { getContent } from "@/lib/content";
 
 export async function Footer() {
   "use cache";
-  const popular = (await getCategoryTree()).toSorted((a, b) => b.count - a.count).slice(0, 5);
+  const [tree, { footer, site }] = await Promise.all([getCategoryTree(), getContent()]);
+  const popular = tree.toSorted((a, b) => b.count - a.count).slice(0, 5);
   return (
     <footer className="footer">
       <div className="container">
         <div className="footgrid">
           <div>
             <Image className="footlogo" src="/img/logo.webp" alt="SMARTLINE" width={164} height={42} />
-            <p>ყველაფერი საჭირო თქვენი ოფისისთვის, ბიზნესისთვის და სახლისთვის.</p>
+            <p>{footer.description}</p>
           </div>
           <div>
-            <h3>SMARTLINE</h3>
-            <Link href="/about">ჩვენ შესახებ</Link>
-            <Link href="/catalog">პროდუქცია</Link>
-            <Link href="/delivery">მიწოდება და გადახდა</Link>
-            <Link href="/faq">ხშირად დასმული კითხვები</Link>
-            <Link href="/contact">კონტაქტი</Link>
+            <h3>{footer.menuTitle}</h3>
+            {footer.menuLinks.map((l) => (
+              <Link key={l.href + l.label} href={l.href}>
+                {l.label}
+              </Link>
+            ))}
           </div>
           <div>
-            <h3>პოპულარული კატეგორიები</h3>
+            <h3>{footer.categoriesTitle}</h3>
             {popular.map((c) => (
               <Link key={c.id} href={categoryUrl(c.slug)}>
                 {c.name}
@@ -34,7 +35,7 @@ export async function Footer() {
             ))}
           </div>
           <div>
-            <h3>დაგვიკავშირდით</h3>
+            <h3>{footer.contactTitle}</h3>
             <p className="footline">
               <Icon name="pin" /> {site.address}
             </p>
@@ -44,10 +45,13 @@ export async function Footer() {
             <a className="footline" href={`mailto:${site.email}`}>
               <Icon name="mail" /> {site.email}
             </a>
+            <p className="footline">
+              <Icon name="clock" /> {site.hours}
+            </p>
           </div>
         </div>
         <div className="bottom">
-          <span>© {new Date().getFullYear()} SMARTLINE. ყველა უფლება დაცულია.</span>
+          <span>© {new Date().getFullYear()} {site.company}. ყველა უფლება დაცულია.</span>
           <strong>DESIGN BY INFINITY</strong>
         </div>
       </div>
@@ -74,7 +78,7 @@ export function MobileTabBar() {
         <span className="tabicon">
           <Icon name="heart" />
         </span>
-        რჩეულები
+        სურვილები
       </Link>
       <MobileCartTab />
     </nav>

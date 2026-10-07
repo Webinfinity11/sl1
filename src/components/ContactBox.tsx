@@ -1,7 +1,8 @@
 import { Icon } from "@/components/Icon";
-import { site } from "@/lib/site";
+import { getContent } from "@/lib/content";
 
-export function ContactBox() {
+export async function ContactBox() {
+  const { site } = await getContent();
   return (
     <div className="contactbox">
       <p>

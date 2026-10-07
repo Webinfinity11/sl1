@@ -22,7 +22,6 @@ const nextConfig: NextConfig = {
     return [
       { source: "/shop/:slug", destination: "/product/:slug", permanent: true },
       { source: "/shop", destination: "/catalog", permanent: true },
-      { source: "/cart", destination: "/checkout", permanent: true },
       { source: "/wp-admin/:path*", destination: "/admin", permanent: false },
     ];
   },

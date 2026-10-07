@@ -1,11 +1,13 @@
 import Link from "next/link";
 import { Icon } from "@/components/Icon";
 import { ProductGrid } from "@/components/ProductCard";
+import { PriceFilter } from "@/components/PriceFilter";
+import { SidebarTree, type SideNode } from "@/components/SidebarTree";
 import { SortSelect } from "@/components/SortSelect";
 import { getCategoryTree, getProducts, type CategoryNode, type ProductQuery, type SortKey } from "@/lib/data";
 import { categoryUrl } from "@/lib/format";
 
-export type ListingParams = { q?: string; sort?: string; page?: string; sale?: string; stock?: string };
+export type ListingParams = { q?: string; sort?: string; page?: string; sale?: string; stock?: string; min?: string; max?: string };
 
 const sorts: SortKey[] = ["default", "new", "price-asc", "price-desc", "name"];
 
@@ -16,6 +18,8 @@ export function parseListing(sp: ListingParams): ProductQuery {
     page: Math.max(1, parseInt(sp.page ?? "1") || 1),
     sale: sp.sale === "1",
     inStock: sp.stock === "1",
+    minPrice: Math.max(0, parseFloat(sp.min ?? "") || 0) || undefined,
+    maxPrice: Math.max(0, parseFloat(sp.max ?? "") || 0) || undefined,
   };
 }
 
@@ -77,6 +81,7 @@ export async function Listing({
               </Link>
             )}
           </div>
+          <PriceFilter key={`${query.minPrice}-${query.maxPrice}`} min={query.minPrice} max={query.maxPrice} />
           <span className="resultcount">{total} პროდუქტი</span>
           <SortSelect value={query.sort!} />
         </div>
@@ -101,41 +106,15 @@ export async function Listing({
 }
 
 function Sidebar({ tree, activeId }: { tree: CategoryNode[]; activeId?: number }) {
-  const inBranch = (c: CategoryNode): boolean => c.id === activeId || c.children.some(inBranch);
-  return (
-    <aside className="sidebar" aria-label="კატეგორიები">
-      <h3>კატეგორიები</h3>
-      <ul className="side-list">
-        <li>
-          <Link className={activeId ? "" : "active"} href="/catalog">
-            ყველა პროდუქტი
-          </Link>
-        </li>
-        {tree
-          .filter((c) => c.count > 0)
-          .map((c) => (
-            <li key={c.id}>
-              <Link className={c.id === activeId ? "active" : ""} href={categoryUrl(c.slug)}>
-                {c.name} <small>{c.count}</small>
-              </Link>
-              {inBranch(c) && c.children.length > 0 && (
-                <ul className="side-list side-sub">
-                  {c.children
-                    .filter((s) => s.count > 0)
-                    .map((s) => (
-                      <li key={s.id}>
-                        <Link className={s.id === activeId ? "active" : ""} href={categoryUrl(s.slug)}>
-                          {s.name} <small>{s.count}</small>
-                        </Link>
-                      </li>
-                    ))}
-                </ul>
-              )}
-            </li>
-          ))}
-      </ul>
-    </aside>
-  );
+  const strip = (n: CategoryNode): SideNode => ({
+    id: n.id,
+    name: n.name,
+    slug: n.slug,
+    image: n.image,
+    count: n.count,
+    children: n.children.map(strip),
+  });
+  return <SidebarTree tree={tree.filter((c) => c.count > 0).map(strip)} activeId={activeId} />;
 }
 
 function Pagination({ page, pages, link }: { page: number; pages: number; link: (n: number) => string }) {

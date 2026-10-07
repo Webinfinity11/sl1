@@ -10,10 +10,11 @@ const links = [
   ["/admin/orders", "შეკვეთები"],
   ["/admin/products", "პროდუქცია"],
   ["/admin/categories", "კატეგორიები"],
+  ["/admin/content", "საიტის კონტენტი"],
   ["/admin/settings", "პარამეტრები"],
 ] as const;
 
-export function AdminNav() {
+export function AdminNav({ newOrders = 0 }: { newOrders?: number }) {
   const path = usePathname();
   const active = (href: string) => (href === "/admin" ? path === href : path.startsWith(href));
   return (
@@ -31,6 +32,9 @@ export function AdminNav() {
             }`}
           >
             {label}
+            {href === "/admin/orders" && newOrders > 0 && (
+              <span className="ml-2 inline-grid min-w-5 h-5 px-1.5 place-items-center rounded-full bg-red-500 text-white text-xs font-bold">{newOrders}</span>
+            )}
           </Link>
         ))}
       </nav>

@@ -4,13 +4,14 @@ import { Suspense } from "react";
 import { Icon } from "@/components/Icon";
 import { HeaderCounters } from "@/components/cart/CartUI";
 import { getCategoryTree } from "@/lib/data";
-import { site } from "@/lib/site";
+import { getContent } from "@/lib/content";
 import { CategoryMenu, type MenuCategory } from "./CategoryMenu";
+import { NavLinks } from "./NavLinks";
 import { SearchBox } from "./SearchBox";
 
 export async function Header() {
   "use cache";
-  const tree = await getCategoryTree();
+  const [tree, { header, site }] = await Promise.all([getCategoryTree(), getContent()]);
   const menu: MenuCategory[] = tree
     .filter((c) => c.count > 0)
     .map((c) => ({
@@ -29,11 +30,14 @@ export async function Header() {
       <div className="topbar">
         <div className="container topinner">
           <span>
-            <Icon name="truck" /> უფასო მიწოდება {site.freeDeliveryFrom} ₾-დან
+            <Icon name="truck" /> {header.topbarText}
           </span>
           <div className="toplinks">
-            <Link href="/delivery">მიწოდება და გადახდა</Link>
-            <Link href="/faq">ხშირად დასმული კითხვები</Link>
+            {header.topLinks.map((l) => (
+              <Link key={l.href + l.label} href={l.href}>
+                {l.label}
+              </Link>
+            ))}
             <a href={`tel:${site.phone}`}>დაგვიკავშირდით: {site.phoneLabel}</a>
           </div>
         </div>
@@ -51,19 +55,21 @@ export async function Header() {
             <Suspense fallback={<div className="catwrap"><button className="catalogue">ყველა კატეგორია</button></div>}>
               <CategoryMenu tree={menu} />
             </Suspense>
-            <Link className="navlink" href="/catalog">
-              პროდუქცია
-            </Link>
-            <Link className="navlink" href="/about">
-              ჩვენ შესახებ
-            </Link>
-            <Link className="navlink" href="/contact">
-              კონტაქტი
-            </Link>
-            <Link className="navoffer" href="/catalog?sale=1">
-              <Icon name="tag" />
-              სპეციალური ფასები
-            </Link>
+            <Suspense
+              fallback={header.navLinks.map((l) => (
+                <Link key={l.href + l.label} className="navlink" href={l.href}>
+                  {l.label}
+                </Link>
+              ))}
+            >
+              <NavLinks links={header.navLinks} />
+            </Suspense>
+            {header.offerLabel && (
+              <Link className="navoffer" href={header.offerHref || "/catalog"}>
+                <Icon name="tag" />
+                {header.offerLabel}
+              </Link>
+            )}
           </div>
         </nav>
       </header>

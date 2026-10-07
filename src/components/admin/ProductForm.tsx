@@ -21,6 +21,8 @@ export function ProductForm({ product, categories, selected }: { product: Produc
   const [price, setPrice] = useState(product ? String(product.price) : "");
   const [salePrice, setSalePrice] = useState(product?.salePrice != null ? String(product.salePrice) : "");
   const [inStock, setInStock] = useState(product?.inStock ?? true);
+  const [stockQty, setStockQty] = useState(product?.stockQty != null ? String(product.stockQty) : "");
+  const tracked = stockQty.trim() !== "";
   const [published, setPublished] = useState(product?.published ?? true);
   const [featured, setFeatured] = useState(product?.featured ?? false);
   const [summary, setSummary] = useState(product?.summary ?? "");
@@ -51,6 +53,7 @@ export function ProductForm({ product, categories, selected }: { product: Produc
         price: price || 0,
         salePrice: salePrice || null,
         inStock,
+        stockQty: tracked ? stockQty : null,
         published,
         featured,
         summary,
@@ -183,8 +186,14 @@ export function ProductForm({ product, categories, selected }: { product: Produc
               საიტზე გამოჩნდეს
             </label>
             <label className="flex items-center gap-2">
-              <input type="checkbox" checked={inStock} onChange={(e) => setInStock(e.target.checked)} className="h-4 w-4 accent-[#174abc]" />
-              მარაგშია
+              <input
+                type="checkbox"
+                checked={tracked ? Number(stockQty) > 0 : inStock}
+                disabled={tracked}
+                onChange={(e) => setInStock(e.target.checked)}
+                className="h-4 w-4 accent-[#174abc]"
+              />
+              მარაგშია {tracked && <span className="text-xs text-slate-500">(რაოდენობით)</span>}
             </label>
             <label className="flex items-center gap-2">
               <input type="checkbox" checked={featured} onChange={(e) => setFeatured(e.target.checked)} className="h-4 w-4 accent-[#174abc]" />
@@ -200,13 +209,24 @@ export function ProductForm({ product, categories, selected }: { product: Produc
 
         <Card title="ფასი">
           <div className="grid grid-cols-2 gap-3">
-            <Field label="ფასი ₾" hint="0 = ფასი შეთანხმებით">
+            <Field label="ფასი ₾" hint="მაგ. 12.50">
               <input type="number" step="0.01" min="0" value={price} onChange={(e) => setPrice(e.target.value)} className={inputCls} />
             </Field>
             <Field label="ფასდაკლებით ₾" hint="ცარიელი = არა">
               <input type="number" step="0.01" min="0" value={salePrice} onChange={(e) => setSalePrice(e.target.value)} className={inputCls} />
             </Field>
           </div>
+        </Card>
+
+        <Card title="მარაგი">
+          <Field label="რაოდენობა მარაგში" hint="ცარიელი = არ ითვლება. შეკვეთისას ავტომატურად აკლდება.">
+            <input type="number" min="0" step="1" value={stockQty} onChange={(e) => setStockQty(e.target.value)} placeholder="არ ითვლება" className={inputCls} />
+          </Field>
+          {tracked && Number(stockQty) <= 5 && (
+            <p className={`text-sm mt-2 ${Number(stockQty) === 0 ? "text-red-600" : "text-amber-600"}`}>
+              {Number(stockQty) === 0 ? "ამოწურულია — საიტზე „არ არის მარაგში“" : "მცირე მარაგი — საიტზე ჩანს „დარჩა N ც.“"}
+            </p>
+          )}
         </Card>
 
         <Card title={`კატეგორიები (${cats.length})`}>

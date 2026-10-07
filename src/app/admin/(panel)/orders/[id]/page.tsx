@@ -37,8 +37,8 @@ export default async function OrderDetail({ params }: PageProps<"/admin/orders/[
                   {i.sku && <div className="text-xs text-slate-500">კოდი: {i.sku}</div>}
                 </div>
                 <div className="text-right whitespace-nowrap">
-                  {i.qty} × {i.price ? `${money(i.price)} ₾` : <span className="text-amber-600">ფასი დასაზუსტებელი</span>}
-                  <div className="font-semibold">{i.price ? `${money(i.price * i.qty)} ₾` : "—"}</div>
+                  {i.qty} × <span className={i.price ? "" : "text-amber-600"}>{money(i.price)} ₾</span>
+                  <div className="font-semibold">{money(i.price * i.qty)} ₾</div>
                 </div>
               </div>
             ))}
@@ -47,7 +47,7 @@ export default async function OrderDetail({ params }: PageProps<"/admin/orders/[
             <span>ჯამი</span>
             <b>{money(order.total)} ₾</b>
           </div>
-          {quote && <p className="text-sm text-amber-700 mt-2">შეკვეთაში არის „ფასი შეთანხმებით“ პროდუქცია — დაუკავშირდით კლიენტს.</p>}
+          {quote && <p className="text-sm text-amber-700 mt-2">შეკვეთაში არის 0 ₾-იანი პროდუქცია — ფასი დააზუსტეთ კლიენტთან.</p>}
         </Card>
         <Card title="მომხმარებელი">
           <dl className="grid gap-3 text-sm">

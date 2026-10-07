@@ -8,6 +8,8 @@ export type CartLine = {
   slug: string;
   price: number;
   image: string | null;
+  /** Stock limit when the shop tracks stock for this product. */
+  max?: number;
   qty: number;
 };
 export type FavItem = Omit<CartLine, "qty">;
@@ -17,7 +19,6 @@ type CartState = {
   favs: FavItem[];
   count: number;
   total: number;
-  hasQuoteItems: boolean;
   drawerOpen: boolean;
   setDrawerOpen: (open: boolean) => void;
   add: (item: FavItem, qty?: number) => void;
@@ -71,15 +72,15 @@ export function CartProvider({ children }: { children: ReactNode }) {
     return () => clearTimeout(t);
   }, [toast]);
 
-  const clampQty = (n: number) => Math.min(MAX_QTY, Math.max(1, Math.floor(n) || 1));
+  const clampQty = (n: number, max = MAX_QTY) => Math.min(max, MAX_QTY, Math.max(1, Math.floor(n) || 1));
 
   const add = useCallback((item: FavItem, qty = 1) => {
     setLines((ls) => {
       const existing = ls.find((l) => l.id === item.id);
-      if (existing) return ls.map((l) => (l.id === item.id ? { ...l, ...item, qty: clampQty(l.qty + qty) } : l));
-      return [...ls, { ...item, qty: clampQty(qty) }];
+      if (existing) return ls.map((l) => (l.id === item.id ? { ...l, ...item, qty: clampQty(l.qty + qty, item.max) } : l));
+      return [...ls, { ...item, qty: clampQty(qty, item.max) }];
     });
-    setToast("პროდუქტი დაემატა კალათაში ✓");
+    setDrawerOpen(true);
   }, []);
 
   const value = useMemo<CartState>(
@@ -88,11 +89,10 @@ export function CartProvider({ children }: { children: ReactNode }) {
       favs,
       count: lines.reduce((n, l) => n + l.qty, 0),
       total: lines.reduce((n, l) => n + l.price * l.qty, 0),
-      hasQuoteItems: lines.some((l) => l.price === 0),
       drawerOpen,
       setDrawerOpen,
       add,
-      setQty: (id, qty) => setLines((ls) => ls.map((l) => (l.id === id ? { ...l, qty: clampQty(qty) } : l))),
+      setQty: (id, qty) => setLines((ls) => ls.map((l) => (l.id === id ? { ...l, qty: clampQty(qty, l.max) } : l))),
       remove: (id) => setLines((ls) => ls.filter((l) => l.id !== id)),
       clear: () => setLines([]),
       toggleFav: (item) =>

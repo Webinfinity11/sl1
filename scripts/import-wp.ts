@@ -78,7 +78,7 @@ function parseSpecs(html: string): Spec[] {
 const norm = (s: string) => s.replace(/\s+/g, "");
 const designImages: Record<string, string> = JSON.parse(readFileSync("scripts/category-images.json", "utf8"));
 const designImageFor = (name: string) =>
-  Object.entries(designImages).find(([k]) => norm(k) === norm(name))?.[1] ?? null;
+  Object.entries(designImages).find(([k]) => norm(name).startsWith(norm(k)))?.[1] ?? null;
 
 async function mirror(src: string, path: string): Promise<string | null> {
   const ext = (src.split("?")[0].match(/\.(\w{3,4})$/)?.[1] ?? "jpg").toLowerCase();

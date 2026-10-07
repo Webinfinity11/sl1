@@ -5,6 +5,7 @@ import { requireAdmin } from "@/lib/auth";
 import { ORDER_STATUSES, ORDER_STATUS_LABELS } from "@/lib/admin-shared";
 import { money } from "@/lib/format";
 import { PageTitle, StatusBadge } from "@/components/admin/ui";
+import { AutoRefresh } from "@/components/admin/AutoRefresh";
 
 export default async function OrdersAdmin({ searchParams }: PageProps<"/admin/orders">) {
   await requireAdmin();
@@ -19,6 +20,7 @@ export default async function OrdersAdmin({ searchParams }: PageProps<"/admin/or
 
   return (
     <>
+      <AutoRefresh />
       <PageTitle>შეკვეთები</PageTitle>
       <div className="flex flex-wrap gap-2 mb-4">
         {[undefined, ...ORDER_STATUSES].map((s) => (

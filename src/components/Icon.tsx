@@ -20,6 +20,7 @@ const paths = {
   trash: <path d="M3 6h18M9 6V3h6v3M5 6l1 15h12l1-15M10 10v7M14 10v7" />,
   filter: <path d="M3 5h18M6 12h12M10 19h4" />,
   check: <path d="m5 12 5 5 9-10" />,
+  clock: <><circle cx="12" cy="12" r="9" /><path d="M12 7v5l3 2" /></>,
   user: <><circle cx="12" cy="8" r="4" /><path d="M4 21c1-4 4-6 8-6s7 2 8 6" /></>,
 } as const;
 

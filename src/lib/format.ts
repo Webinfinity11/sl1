@@ -7,3 +7,8 @@ export const discount = (p: { price: number; salePrice: number | null }) =>
 
 export const productUrl = (slug: string) => `/product/${encodeURIComponent(slug)}`;
 export const categoryUrl = (slug: string) => `/category/${encodeURIComponent(slug)}`;
+
+/** Units a shopper may put in the cart: tracked stock, or the general cap. */
+export const maxQty = (stockQty: number | null | undefined) => (stockQty == null ? 999 : Math.max(0, stockQty));
+
+export const LOW_STOCK = 5;
