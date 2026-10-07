@@ -41,9 +41,15 @@ export function AddToCart({ item, size }: { item: FavItem; size?: "lg" }) {
   return (
     <div className={size === "lg" ? "purchase purchase-lg" : "purchase"}>
       <Stepper value={qty} onChange={(n) => setQty(clamp(n))} label={item.name} max={max} />
-      <button type="button" className="add" onClick={() => add(item, qty)}>
+      <button
+        type="button"
+        className={size === "lg" ? "add" : "add add-icon"}
+        onClick={() => add(item, qty)}
+        aria-label={`${item.name}: კალათაში დამატება`}
+        title="კალათაში დამატება"
+      >
         <Icon name="cart" />
-        {size === "lg" ? "კალათაში დამატება" : "დამატება"}
+        {size === "lg" && "კალათაში დამატება"}
       </button>
     </div>
   );

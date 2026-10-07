@@ -423,12 +423,16 @@
 .add { white-space: nowrap; padding: 0 12px; gap: 7px; font-size: 14px; letter-spacing: .1px; border-radius: 10px; box-shadow: 0 4px 12px #174abc29; transition: background .15s, box-shadow .15s; }
 .add:hover { box-shadow: 0 6px 16px #174abc40; }
 .add .icon { width: 17px; height: 17px; }
-/* cards narrower than 280px: stepper on top, full-width button below */
-@container (max-width: 280px) {
-  .purchase { grid-template-columns: minmax(0, 1fr); height: auto; gap: 8px; }
-  .purchase .stepper { height: 38px; justify-content: space-between; }
-  .purchase .stepper button { width: 38px; }
-  .purchase .stepper input { flex: 1; }
-  .purchase .add { min-height: 42px; }
-}
+/* cards: quantity stepper fills the row, icon-only cart button beside it */
+.purchase { grid-template-columns: minmax(0, 1fr) 46px; }
+.purchase .stepper { justify-content: space-between; }
+.purchase .stepper button { width: 34px; }
+.purchase .stepper input { flex: 1; min-width: 0; }
+.add-icon { padding: 0; }
+.add-icon .icon { width: 20px; height: 20px; }
 .purchase-lg { display: flex; }
+@media (max-width: 600px) {
+  .purchase:not(.purchase-lg) { height: 40px; grid-template-columns: minmax(0, 1fr) 42px; }
+  .purchase:not(.purchase-lg) .stepper { height: 100%; }
+  .purchase:not(.purchase-lg) .add { min-height: 0; }
+}
