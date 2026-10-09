@@ -313,3 +313,6 @@ export const contentSections: { key: ContentKey; title: string; description: str
     ],
   },
 ];
+
+/** Settings row holding the home page category picks ({ ids: number[] }); kept outside the content sections. */
+export const HOME_CATEGORIES_KEY = "homeCategories";

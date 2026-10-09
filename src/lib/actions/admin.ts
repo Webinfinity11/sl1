@@ -10,7 +10,7 @@ import { admins, categories, db, orders, productCategories, products, settings }
 import { ORDER_STATUSES, slugify } from "@/lib/admin-shared";
 import { adjustStock } from "@/lib/stock";
 import { sanitizeSection } from "@/lib/content";
-import { contentDefaults, type ContentKey } from "@/lib/content-schema";
+import { contentDefaults, HOME_CATEGORIES_KEY, type ContentKey } from "@/lib/content-schema";
 import { createSession, destroySession, requireAdmin } from "@/lib/auth";
 
 export type ActionResult = { ok: true; id?: number } | { ok: false; error: string };
@@ -230,6 +230,17 @@ export async function saveContent(key: string, value: unknown): Promise<ActionRe
     .insert(settings)
     .values({ key, value: clean })
     .onConflictDoUpdate({ target: settings.key, set: { value: clean, updatedAt: new Date() } });
+  updateTag("content");
+  return { ok: true };
+}
+
+export async function saveHomeCategories(ids: number[]): Promise<ActionResult> {
+  await requireAdmin();
+  const clean = [...new Set(ids.map(Number).filter(Number.isInteger))].slice(0, 60);
+  await db
+    .insert(settings)
+    .values({ key: HOME_CATEGORIES_KEY, value: { ids: clean } })
+    .onConflictDoUpdate({ target: settings.key, set: { value: { ids: clean }, updatedAt: new Date() } });
   updateTag("content");
   return { ok: true };
 }

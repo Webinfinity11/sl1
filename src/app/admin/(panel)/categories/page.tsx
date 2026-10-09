@@ -4,16 +4,26 @@ import { sql } from "drizzle-orm";
 import { categories, db, productCategories, type Category } from "@/db";
 import { requireAdmin } from "@/lib/auth";
 import { Button, PageTitle } from "@/components/admin/ui";
+import { HomeCategoriesEditor } from "@/components/admin/HomeCategoriesEditor";
+import { getCategoryTree, type CategoryNode } from "@/lib/data";
+import { getHomeCategoryIds } from "@/lib/content";
 
 export default async function CategoriesAdmin() {
   await requireAdmin();
-  const [cats, counts] = await Promise.all([
+  const [cats, counts, tree, picked] = await Promise.all([
     db.select().from(categories).orderBy(categories.sortOrder, categories.name),
     db
       .select({ id: productCategories.categoryId, n: sql<number>`count(*)::int` })
       .from(productCategories)
       .groupBy(productCategories.categoryId),
+    getCategoryTree(),
+    getHomeCategoryIds(),
   ]);
+  // Same fallback as the home page: the first 12 top-level categories until a pick is saved.
+  const homeIds = picked ?? tree.slice(0, 12).map((c) => c.id);
+  const homeOptions = (function flat(list: CategoryNode[], depth: number): { id: number; name: string; depth: number; count: number }[] {
+    return list.flatMap((c) => [{ id: c.id, name: c.name, depth, count: c.count }, ...flat(c.children, depth + 1)]);
+  })(tree, 0);
   const count = (id: number) => counts.find((c) => c.id === id)?.n ?? 0;
   const childrenOf = (id: number | null) => cats.filter((c) => c.parentId === id);
 
@@ -45,6 +55,9 @@ export default async function CategoriesAdmin() {
       >
         კატეგორიები <span className="text-slate-400 font-normal text-lg">({cats.length})</span>
       </PageTitle>
+      <div className="mb-6">
+        <HomeCategoriesEditor options={homeOptions} initial={homeIds} />
+      </div>
       <div className="bg-white rounded-xl border border-slate-200 divide-y divide-slate-100">{rows(childrenOf(null), 0)}</div>
     </>
   );

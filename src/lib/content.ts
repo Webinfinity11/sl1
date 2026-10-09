@@ -1,7 +1,8 @@
 import "server-only";
 import { cacheLife, cacheTag } from "next/cache";
+import { eq } from "drizzle-orm";
 import { db, settings } from "@/db";
-import { contentDefaults, type Content, type ContentKey } from "@/lib/content-schema";
+import { contentDefaults, HOME_CATEGORIES_KEY, type Content, type ContentKey } from "@/lib/content-schema";
 
 /** Site content with admin edits layered over the defaults. */
 export async function getContent(): Promise<Content> {
@@ -55,4 +56,14 @@ export function sanitizeSection(key: ContentKey, input: unknown): Record<string,
     }
   }
   return out;
+}
+
+/** Category ids picked for the home page grid, in display order; null until the admin saves a selection. */
+export async function getHomeCategoryIds(): Promise<number[] | null> {
+  "use cache";
+  cacheLife("hours");
+  cacheTag("content");
+  const [row] = await db.select().from(settings).where(eq(settings.key, HOME_CATEGORIES_KEY));
+  const ids = row?.value.ids;
+  return Array.isArray(ids) && ids.length ? ids.map(Number).filter(Number.isInteger) : null;
 }

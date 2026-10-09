@@ -4,9 +4,9 @@ import { cacheLife } from "next/cache";
 import { Icon } from "@/components/Icon";
 import { ProductCard } from "@/components/ProductCard";
 import { RailScroller } from "@/components/RailScroller";
-import { getCategoryTree, getHomeSections, type CategoryNode, type ProductCard as Card } from "@/lib/data";
+import { flattenTree, getCategoryTree, getHomeSections, type CategoryNode, type ProductCard as Card } from "@/lib/data";
 import { categoryUrl } from "@/lib/format";
-import { getContent } from "@/lib/content";
+import { getContent, getHomeCategoryIds } from "@/lib/content";
 
 const benefitIcons = ["truck", "box", "tag", "shield"] as const;
 
@@ -16,9 +16,17 @@ export default async function HomePage() {
   "use cache";
   cacheLife("hours");
 
-  const [tree, { latest, sale }, { home, site }] = await Promise.all([getCategoryTree(), getHomeSections(), getContent()]);
-  // Tree order = admin "sort order", then product count.
-  const shown = tree.slice(0, 12);
+  const [tree, { latest, sale }, { home, site }, picked] = await Promise.all([
+    getCategoryTree(),
+    getHomeSections(),
+    getContent(),
+    getHomeCategoryIds(),
+  ]);
+  // Admin picks in their saved order; before any pick, the first 12 of the tree (sort order, then product count).
+  const all = flattenTree(tree);
+  const shown = picked
+    ? picked.map((id) => all.find((c) => c.id === id)).filter((c): c is CategoryNode => !!c)
+    : tree.slice(0, 12);
   const productTotal = tree.reduce((n, c) => n + c.count, 0);
 
   return (
