@@ -8,7 +8,7 @@ export const metadata: Metadata = { title: "კატეგორიები" }
 
 export default async function CategoriesPage() {
   "use cache";
-  const tree = (await getCategoryTree()).filter((c) => c.count > 0);
+  const tree = await getCategoryTree();
   return (
     <div className="container">
       <div className="pagehead">
@@ -23,10 +23,9 @@ export default async function CategoriesPage() {
                 {c.name} <small className="muted">({c.count})</small>
               </span>
             </Link>
-            {c.children.some((s) => s.count > 0) && (
+            {c.children.length > 0 && (
               <ul>
                 {c.children
-                  .filter((s) => s.count > 0)
                   .map((s) => (
                     <li key={s.id}>
                       <Link href={categoryUrl(s.slug)}>{s.name}</Link>

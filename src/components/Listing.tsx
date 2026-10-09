@@ -59,7 +59,6 @@ export async function Listing({
         {subcategories && subcategories.length > 0 && (
           <div className="subcats">
             {subcategories
-              .filter((s) => s.count > 0)
               .map((s) => (
                 <Link key={s.id} className="chip" href={categoryUrl(s.slug)}>
                   {s.name} <small>{s.count}</small>
@@ -114,7 +113,7 @@ function Sidebar({ tree, activeId }: { tree: CategoryNode[]; activeId?: number }
     count: n.count,
     children: n.children.map(strip),
   });
-  return <SidebarTree tree={tree.filter((c) => c.count > 0).map(strip)} activeId={activeId} />;
+  return <SidebarTree tree={tree.map(strip)} activeId={activeId} />;
 }
 
 function Pagination({ page, pages, link }: { page: number; pages: number; link: (n: number) => string }) {

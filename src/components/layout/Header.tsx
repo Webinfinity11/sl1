@@ -13,7 +13,6 @@ export async function Header() {
   "use cache";
   const [tree, { header, site }] = await Promise.all([getCategoryTree(), getContent()]);
   const menu: MenuCategory[] = tree
-    .filter((c) => c.count > 0)
     .map((c) => ({
       id: c.id,
       name: c.name,
@@ -21,7 +20,6 @@ export async function Header() {
       image: c.image,
       count: c.count,
       children: c.children
-        .filter((s) => s.count > 0)
         .map((s) => ({ id: s.id, name: s.name, slug: s.slug, count: s.count })),
     }));
 

@@ -42,7 +42,7 @@ function Branch({
   contains: (n: SideNode) => boolean;
 }) {
   const [open, setOpen] = useState(startOpen);
-  const kids = node.children.filter((c) => c.count > 0);
+  const kids = node.children;
   const active = node.id === activeId;
   return (
     <li className={depth === 0 ? "side-root" : "side-child"}>

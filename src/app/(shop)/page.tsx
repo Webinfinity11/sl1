@@ -18,7 +18,7 @@ export default async function HomePage() {
 
   const [tree, { latest, sale }, { home, site }] = await Promise.all([getCategoryTree(), getHomeSections(), getContent()]);
   // Tree order = admin "sort order", then product count.
-  const shown = tree.filter((c) => c.count > 0).slice(0, 12);
+  const shown = tree.slice(0, 12);
   const productTotal = tree.reduce((n, c) => n + c.count, 0);
 
   return (

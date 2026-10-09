@@ -156,7 +156,8 @@ const categorySchema = z.object({
   slug: z.string().trim().max(100).optional(),
   parentId: z.number().int().nullable(),
   description: z.string().max(2000),
-  image: z.union([z.url(), z.literal(""), z.null()]),
+  // Imported categories use bundled images like /img/categories/0.webp, so site paths are valid too.
+  image: z.union([z.url(), z.string().regex(/^\/[^/]/), z.literal(""), z.null()]),
   sortOrder: z.coerce.number().int().min(-1000).max(1000),
 });
 export type CategoryInput = z.input<typeof categorySchema>;

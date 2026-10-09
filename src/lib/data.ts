@@ -50,8 +50,11 @@ export async function getCategoryTree() {
     list.sort((a, b) => a.sortOrder - b.sortOrder || b.count - a.count);
     list.forEach((n) => sortTree(n.children));
   };
+  // Empty categories left over from the WooCommerce import stay hidden; ones added in the admin show right away.
+  const prune = (list: CategoryNode[]): CategoryNode[] =>
+    list.filter((n) => n.count > 0 || n.wpId === null).map((n) => ({ ...n, children: prune(n.children) }));
   sortTree(roots);
-  return roots;
+  return prune(roots);
 }
 
 export function flattenTree(nodes: CategoryNode[]): CategoryNode[] {
